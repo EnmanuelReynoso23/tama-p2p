@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <rect width="32" height="32" fill="#f4b8c0"/>
+  <!-- pet outline -->
+  <path fill="#2b2138" d="M10 8h12v1h2v1h1v2h1v9h-1v2h-1v1h-2v1H10v-1H8v-1H7v-2H6v-9h1v-2h1V9h2z"/>
+  <!-- pet body -->
+  <path fill="#fff1d9" d="M10 9h12v1h2v2h1v9h-1v2h-2v1H10v-1H8v-2H7v-9h1v-2h2z"/>
+  <!-- shine -->
+  <rect x="10" y="10" width="3" height="1" fill="#ffffff"/>
+  <rect x="9" y="11" width="1" height="2" fill="#ffffff"/>
+  <!-- eyes -->
+  <rect x="11" y="14" width="2" height="3" fill="#2b2138"/>
+  <rect x="19" y="14" width="2" height="3" fill="#2b2138"/>
+  <rect x="11" y="14" width="1" height="1" fill="#ffffff"/>
+  <rect x="19" y="14" width="1" height="1" fill="#ffffff"/>
+  <!-- blush -->
+  <rect x="9" y="18" width="2" height="1" fill="#f28aa8"/>
+  <rect x="21" y="18" width="2" height="1" fill="#f28aa8"/>
+  <!-- smile -->
+  <rect x="14" y="18" width="1" height="1" fill="#2b2138"/>
+  <rect x="17" y="18" width="1" height="1" fill="#2b2138"/>
+  <rect x="15" y="19" width="2" height="1" fill="#2b2138"/>
+  <!-- flame (streak) -->
+  <path fill="#2b2138" d="M23 3h2v1h1v1h1v2h1v4h-1v1h-1v1h-4v-1h-1v-1h-1V8h1V7h1v1h1V5h-1V4h1z"/>
+  <path fill="#ff7a1a" d="M23 4h2v1h1v2h1v4h-1v1h-4v-1h-1V8h1v1h1V6h1V5h-1z"/>
+  <path fill="#ffd166" d="M24 7h1v1h1v3h-3v-2h1z"/>
+</svg>

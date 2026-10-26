@@ -14,11 +14,13 @@ export default function CompanionDialogBubble({ onOpenChat }: Props) {
   const currentStreak = useHabitStore((s) => s.currentStreak);
   const habits = useHabitStore((s) => s.habits);
   const peers = useP2PStore((s) => s.peers);
-  const remotePets = useP2PStore((s) => s.remotePets);
+  const peerToPlayer = useP2PStore((s) => s.peerToPlayer);
+  const friends = useP2PStore((s) => s.friends);
 
   const habitsCompleted = habits.filter((h) => h.completed).length;
   const friendOnline = peers.length > 0;
-  const firstRemotePet = Object.values(remotePets)[0];
+  const firstOnlineId = Object.values(peerToPlayer)[0];
+  const firstRemotePet = firstOnlineId ? friends[firstOnlineId]?.pet : undefined;
 
   const greeting = useMemo(() => {
     return getCompanionGreeting({
@@ -35,7 +37,7 @@ export default function CompanionDialogBubble({ onOpenChat }: Props) {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative mx-auto mt-2 w-full max-w-sm rounded-xl border-2 border-[#2b2138] bg-[#fffaf0] p-3 text-xs shadow-md"
+      className="relative mt-4 w-full rounded-2xl border-2 border-ink bg-paper p-3"
     >
       {/* Triangulo tipo globo de dialogo */}
       <div className="absolute -top-2 left-8 h-0 w-0 border-x-8 border-x-transparent border-b-8 border-b-[#2b2138]" />
@@ -43,17 +45,18 @@ export default function CompanionDialogBubble({ onOpenChat }: Props) {
 
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
-          <div className="flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wider text-[#8a5b9b]">
+          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wide text-lilac">
             <span>{petName} dice:</span>
           </div>
-          <p className="mt-1 font-mono text-[11px] leading-relaxed text-[#2b2138]">
+          <p className="mt-1 text-sm leading-relaxed text-ink" aria-live="polite">
             {greeting}
           </p>
         </div>
 
         <button
           onClick={onOpenChat}
-          className="self-center whitespace-nowrap rounded-lg border-2 border-[#2b2138] bg-[#ffd6e0] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#2b2138] transition hover:bg-[#ffb3c6] active:translate-y-px"
+          type="button"
+          className="self-center min-h-[44px] whitespace-nowrap rounded-xl border-2 border-ink bg-blush px-3 text-sm font-extrabold text-ink transition hover:bg-[#ffb3c6] active:translate-y-px"
         >
           Hablar
         </button>

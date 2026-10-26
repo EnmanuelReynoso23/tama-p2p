@@ -6,8 +6,14 @@ import AIChatModal from './components/AIChatModal';
 import Header from './components/Header';
 import Toasts from './components/Toasts';
 import SettingsPanel from './components/SettingsPanel';
-import P2PPanel from './components/P2PPanel';
+import FriendsView from './components/FriendsView';
+import StreakHero from './components/StreakHero';
+import InstallBanner from './components/InstallBanner';
+import BottomNav, { type Tab } from './components/BottomNav';
+import MachineMode from './components/machine/MachineMode';
 import { useP2PStore } from './store/useP2PStore';
+import { useHabitStore } from './store/useHabitStore';
+import { consumeInviteFromUrl, readAppMode } from './network/invite';
 import { PetActorProvider, usePetActorCtx } from './store/usePetActor';
 import { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion';
 import { useTimeSpeed } from './hooks/useTimeSpeed';
@@ -100,30 +106,44 @@ function DebugToggleShortcut() {
   return null;
 }
 
+// Read once at startup, before React renders (it also cleans the URL).
+const INVITE_CODE = typeof window !== 'undefined' ? consumeInviteFromUrl() : null;
+const APP_MODE = typeof window !== 'undefined' ? readAppMode() : 'phone';
+
 function AppInner() {
   useTimeSpeed();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [p2pOpen, setP2pOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [tab, setTab] = useState<Tab>(INVITE_CODE ? 'friends' : 'pet');
+  const habitsLeft = useHabitStore((s) => s.habits.filter((h) => !h.completed).length);
+  const friendsOnline = useP2PStore((s) => new Set(Object.values(s.peerToPlayer)).size);
+  const reduced = usePrefersReducedMotion();
+
+  const changeTab = (t: Tab) => {
+    setTab(t);
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  };
 
   return (
     <>
-      <div className="w-full max-w-sm">
-        <Header
-          onOpenSettings={() => setSettingsOpen(true)}
-          onOpenP2P={() => setP2pOpen(true)}
-        />
-        <CompanionView onOpenChat={() => setChatOpen(true)} />
-        <HabitsCard />
-        <div className="h-12 sm:h-6" aria-hidden />
+      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-[calc(env(safe-area-inset-bottom)+104px)]">
+        <Header onOpenSettings={() => setSettingsOpen(true)} />
+        <InstallBanner />
+        {tab !== 'friends' && <StreakHero onOpenFriends={() => changeTab('friends')} />}
+        <div key={tab} className="tab-panel flex flex-col gap-4">
+          {tab === 'pet' && <CompanionView onOpenChat={() => setChatOpen(true)} />}
+          {tab === 'habits' && <HabitsCard />}
+          {tab === 'friends' && <FriendsView />}
+        </div>
       </div>
+
+      <BottomNav tab={tab} onChange={changeTab} habitsLeft={habitsLeft} friendsOnline={friendsOnline} />
 
       {/* Screen-reader live region: accessible toasts / status */}
       <A11yLiveRegion />
 
       <Toasts />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      {p2pOpen && <P2PPanel onClose={() => setP2pOpen(false)} />}
       {chatOpen && <AIChatModal onClose={() => setChatOpen(false)} />}
       <P2PSyncSubscriber />
       <KeyboardShortcuts />
@@ -135,18 +155,48 @@ function AppInner() {
   );
 }
 
+/**
+ * Joins the room from an invite link, or reconnects to the last room on
+ * launch. Also re-syncs when the app comes back to the foreground.
+ */
+function P2PAutoConnect() {
+  useEffect(() => {
+    const p2p = useP2PStore.getState();
+    if (INVITE_CODE) {
+      p2p.joinRoom(INVITE_CODE);
+      usePetStore.getState().pushToast({
+        title: '¡Te invitaron! 💌',
+        body: 'Conectando con tu amigo… completen sus hábitos juntos para encender la racha.',
+        tone: 'good',
+      });
+    } else if (p2p.autoConnect && p2p.roomId) {
+      p2p.joinRoom(p2p.roomId);
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') useP2PStore.getState().syncCurrentPet();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+  return null;
+}
+
 function P2PSyncSubscriber() {
   const isConnected = useP2PStore((s) => s.isConnected);
   const syncCurrentPet = useP2PStore((s) => s.syncCurrentPet);
   const stats = usePetStore((s) => s.stats);
   const isAsleep = usePetStore((s) => s.isAsleep);
   const name = usePetStore((s) => s.name);
+  const stage = usePetStore((s) => s.stage);
+  const completedDays = useHabitStore((s) => s.completedDays);
+  const habits = useHabitStore((s) => s.habits);
 
   useEffect(() => {
     if (isConnected) {
+      // Throttled inside the store (max one broadcast every few seconds).
       syncCurrentPet();
     }
-  }, [isConnected, stats, isAsleep, name, syncCurrentPet]);
+  }, [isConnected, stats, isAsleep, name, stage, completedDays, habits, syncCurrentPet]);
 
   return null;
 }
@@ -254,26 +304,26 @@ function TitleFaviconSubscriber() {
     // Egg / hatching phases — override everything
     if (!hatched) {
       // Hatching sub-phases via stage string (egg never leaves unless hatch event)
-      if (anim === 'hatching_hatched') return { key: 'hatching', emoji: '*' , tint: '#f6c453', bg: '#fff5dc', label: 'Hatching' };
-      return { key: 'egg', emoji: 'o' , tint: '#fff1d9', bg: '#ffe0a8', label: 'Egg' };
+      if (anim === 'hatching_hatched') return { key: 'hatching', emoji: '*' , tint: '#f6c453', bg: '#fff5dc', label: 'Naciendo' };
+      return { key: 'egg', emoji: 'o' , tint: '#fff1d9', bg: '#ffe0a8', label: 'Huevo' };
     }
     // Sick — strong override
-    if (isSick) return { key: 'sick', emoji: '+' , tint: '#8a6d80', bg: '#e7d8e3', label: 'Sick' };
+    if (isSick) return { key: 'sick', emoji: '+' , tint: '#8a6d80', bg: '#e7d8e3', label: 'Enferma' };
     // Sleeping
-    if (isAsleep || anim === 'sleeping' || anim === 'sleeping_on') return { key: 'sleeping', emoji: 'z' , tint: '#a4b7d6', bg: '#d7e1f3', label: 'Sleeping' };
+    if (isAsleep || anim === 'sleeping' || anim === 'sleeping_on') return { key: 'sleeping', emoji: 'z' , tint: '#a4b7d6', bg: '#d7e1f3', label: 'Durmiendo' };
     // Eating
-    if (anim === 'eating') return { key: 'eating', emoji: '^' , tint: '#e49a6a', bg: '#ffe3c9', label: 'Eating' };
+    if (anim === 'eating') return { key: 'eating', emoji: '^' , tint: '#e49a6a', bg: '#ffe3c9', label: 'Comiendo' };
     // Playing / happy
-    if (anim === 'happy' || anim === 'playing' || anim === 'clean' || anim === 'pet') return { key: 'happy', emoji: ':' , tint: '#7ab08c', bg: '#e0f4e2', label: 'Happy' };
+    if (anim === 'happy' || anim === 'playing' || anim === 'clean' || anim === 'pet') return { key: 'happy', emoji: ':' , tint: '#7ab08c', bg: '#e0f4e2', label: 'Feliz' };
     // Sad
-    if (anim === 'sad' || anim === 'dirty' || anim === 'refuse') return { key: 'sad', emoji: ';' , tint: '#7a86a8', bg: '#dde2ed', label: 'Sad' };
+    if (anim === 'sad' || anim === 'dirty' || anim === 'refuse') return { key: 'sad', emoji: ';' , tint: '#7a86a8', bg: '#dde2ed', label: 'Triste' };
     // Hungry
-    if (anim === 'hungry' || stats.hunger < 30) return { key: 'hungry', emoji: '>' , tint: '#c79273', bg: '#f6dfd0', label: 'Hungry' };
+    if (anim === 'hungry' || stats.hunger < 30) return { key: 'hungry', emoji: '>' , tint: '#c79273', bg: '#f6dfd0', label: 'Con hambre' };
     // Max stats (green / great mood) — all stats ≥ 80
     if (stats.hunger >= 80 && stats.happiness >= 80 && stats.energy >= 80 && stats.hygiene >= 80 && stats.health >= 80) {
-      return { key: 'great', emoji: '<' , tint: '#6fc080', bg: '#d7f3d9', label: 'Great' };
+      return { key: 'great', emoji: '<' , tint: '#6fc080', bg: '#d7f3d9', label: 'Genial' };
     }
-    return { key: 'happy', emoji: ':' , tint: '#7ab08c', bg: '#e0f4e2', label: 'Happy' };
+    return { key: 'happy', emoji: ':' , tint: '#7ab08c', bg: '#e0f4e2', label: 'Feliz' };
   };
 
   const applyMood = (m: { key: string; emoji: string; tint: string; bg: string; label: string }) => {
@@ -545,18 +595,18 @@ function A11yLiveRegion() {
   const stats = usePetStore((s) => s.stats);
   const isAsleep = usePetStore((s) => s.isAsleep);
   const isSick = usePetStore((s) => s.isSick);
-  const [announced, setAnnounced] = useState('Pixel Pet ready.');
+  const [announced, setAnnounced] = useState('Pixel Pet lista.');
 
   useEffect(() => {
     // Build a friendly phrase; throttle changes by 1.5s to avoid chatter.
     let phrase: string;
-    if (isAsleep) phrase = `${name} is sleeping.`;
-    else if (isSick) phrase = `${name} feels sick — give medicine.`;
+    if (isAsleep) phrase = `${name} está durmiendo.`;
+    else if (isSick) phrase = `${name} está enferma: dale medicina.`;
     else {
       const low = lowestName(stats);
-      if (low.value < 30) phrase = `${name} looks ${low.label.toLowerCase()}.`;
-      else if (low.value < 60) phrase = `${name} is doing okay.`;
-      else phrase = `${name} is happy.`;
+      if (low.value < 30) phrase = `${name} tiene ${low.label.toLowerCase()}.`;
+      else if (low.value < 60) phrase = `${name} está bien.`;
+      else phrase = `${name} está feliz.`;
     }
     const id = window.setTimeout(() => setAnnounced(phrase), 1500);
     return () => window.clearTimeout(id);
@@ -571,19 +621,31 @@ function A11yLiveRegion() {
 
 function lowestName(s: { hunger: number; happiness: number; energy: number; hygiene: number; health: number }) {
   const arr = [
-    { label: 'Hungry', value: s.hunger },
-    { label: 'Sad', value: s.happiness },
-    { label: 'Tired', value: s.energy },
-    { label: 'Dirty', value: s.hygiene },
+    { label: 'Hambre', value: s.hunger },
+    { label: 'Tristeza', value: s.happiness },
+    { label: 'Sueño', value: s.energy },
+    { label: 'Que bañarse', value: s.hygiene },
   ];
   return arr.reduce((a, b) => (a.value <= b.value ? a : b));
 }
 
 export default function App() {
+  if (APP_MODE === 'machine') {
+    return (
+      <PetActorProvider>
+        <MachineMode />
+        <P2PAutoConnect />
+        <P2PSyncSubscriber />
+        <SfxSubscriber />
+        <Toasts />
+      </PetActorProvider>
+    );
+  }
   return (
-    <main className="min-h-screen w-full flex flex-col lg:flex-row items-start justify-center gap-6 p-4 sm:p-6 md:p-10">
+    <main className="min-h-[100dvh] w-full">
       <PetActorProvider>
         <AppInner />
+        <P2PAutoConnect />
       </PetActorProvider>
     </main>
   );

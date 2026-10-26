@@ -1,19 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Pixel Pet · Racha con amigos</title>
+    <meta name="description" content="Cuida tu mascota pixel art, cumple tus hábitos y mantén la racha con tus amigos. Instálala desde el enlace, sin tiendas." />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#f4b8c0" />
-    <title>Pixel Pet</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Pixel Pet" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Link previews (WhatsApp, Telegram, iMessage…) for invite links -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pixel Pet · ¡Únete a mi racha! 🔥" />
+    <meta property="og:description" content="Cuidemos nuestras mascotas juntos y no rompamos la racha." />
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
   </head>
-  <body class="font-ui bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 min-h-screen">
+  <body class="font-ui bg-gradient-to-b from-[#fff3e2] via-cream to-[#f3ecff] min-h-screen text-ink">
+    <noscript>Pixel Pet necesita JavaScript para funcionar.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

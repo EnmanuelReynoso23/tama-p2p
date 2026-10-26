@@ -1,31 +1,27 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { usePetStore } from '../store/usePetStore';
-import { useP2PStore } from '../store/useP2PStore';
-import { lifeStageFromAge } from '../game/careScore';
-import { EGG_DURATION_MS } from '../game/constants';
+import { STAGE_LABEL } from '../game/labels';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 interface Props {
   onOpenSettings: () => void;
-  onOpenP2P?: () => void;
 }
 
 /**
- * App header: editable pet name, age ("Day N · Stage"), sound toggle, P2P, settings gear.
+ * App header: editable pet name, age ("Día N · Etapa"), sound toggle, settings gear.
  */
-export default function Header({ onOpenSettings, onOpenP2P }: Props) {
+export default function Header({ onOpenSettings }: Props) {
   const name = usePetStore((s) => s.name);
   const birthTs = usePetStore((s) => s.birthTs);
   const hatched = usePetStore((s) => s.hatched);
   const setName = usePetStore((s) => s.setName);
   const soundOn = usePetStore((s) => s.settings.soundOn);
   const setSound = usePetStore((s) => s.setSoundOn);
-  const isP2PConnected = useP2PStore((s) => s.isConnected);
-  const p2pPeers = useP2PStore((s) => s.peers);
+  const storeStage = usePetStore((s) => s.stage);
+  const reduced = usePrefersReducedMotion();
 
-  const stage = hatched
-    ? lifeStageFromAge(birthTs, Date.now(), EGG_DURATION_MS)
-    : 'egg';
+  const stage = hatched ? storeStage : 'egg';
   const ageDays = hatched ? Math.floor((Date.now() - birthTs) / (24 * 60 * 60 * 1000)) : 0;
 
   const [editing, setEditing] = useState(false);
@@ -48,10 +44,10 @@ export default function Header({ onOpenSettings, onOpenP2P }: Props) {
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -10 }}
+      initial={reduced ? false : { opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="mb-4 flex items-center justify-between gap-3 px-2 sm:px-1"
+      className="flex items-center justify-between gap-3 px-1"
     >
       {/* Left: editable name + age */}
       <div className="flex items-center gap-2 min-w-0">
@@ -60,7 +56,7 @@ export default function Header({ onOpenSettings, onOpenP2P }: Props) {
             ref={inputRef}
             value={draft}
             maxLength={16}
-            aria-label="Rename pet"
+            aria-label="Nombre de tu mascota"
             onChange={(e) => setDraft(e.target.value)}
             onBlur={save}
             onKeyDown={(e) => {
@@ -70,7 +66,7 @@ export default function Header({ onOpenSettings, onOpenP2P }: Props) {
                 setEditing(false);
               }
             }}
-            className="w-32 rounded-md border border-[#2b2138]/15 bg-white/80 px-2 py-1 font-pixel text-[10px] sm:text-xs text-[#2b2138] outline-none focus:ring-2 focus:ring-[#f7a8c4]"
+            className="w-36 min-h-[44px] rounded-xl border-2 border-ink bg-white px-2 font-pixel text-[12px] text-ink outline-none"
           />
         ) : (
           <button
@@ -79,50 +75,31 @@ export default function Header({ onOpenSettings, onOpenP2P }: Props) {
               setEditing(true);
             }}
             type="button"
-            className="font-pixel text-[11px] sm:text-sm text-[#2b2138] hover:text-[#80344a] transition underline-offset-4 hover:underline decoration-dotted decoration-[#f4b8c0] decoration-2 max-w-[40vw] truncate"
-            title="Click to rename pet"
-            aria-label={`Rename pet "${name}"`}
+            className="min-h-[44px] font-pixel text-[14px] text-ink underline-offset-4 decoration-dotted decoration-[#f4b8c0] decoration-2 hover:underline max-w-[44vw] truncate text-left"
+            title="Toca para cambiar el nombre"
+            aria-label={`${name}. Cambiar nombre`}
           >
             {name}
           </button>
         )}
-        <div className="hidden sm:block h-3 w-px bg-[#2b2138]/15" />
-        <div className="font-pixel text-[9px] sm:text-[10px] text-[#6b4a80] whitespace-nowrap">
-          {hatched ? `Day ${ageDays + 1} · ${capitalize(stage)}` : 'In egg…'}
+        <div className="text-xs font-bold text-lilac whitespace-nowrap">
+          {hatched ? `Día ${ageDays + 1} · ${STAGE_LABEL[stage]}` : 'En el huevo…'}
         </div>
       </div>
 
-      {/* Right: P2P + sound toggle + settings gear */}
+      {/* Right: sound toggle + settings gear */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {onOpenP2P && (
-          <div className="relative">
-            <IconBtn
-              onClick={onOpenP2P}
-              ariaLabel="Conexion P2P con amigos"
-            >
-              <NetworkIcon className="w-4 h-4" />
-            </IconBtn>
-            {isP2PConnected && (
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 text-[8px] text-white font-bold items-center justify-center">
-                  {p2pPeers.length}
-                </span>
-              </span>
-            )}
-          </div>
-        )}
         <IconBtn
           onClick={() => setSound(!soundOn)}
-          ariaLabel={soundOn ? 'Sound effects on — click to mute' : 'Sound effects off — click to unmute'}
+          ariaLabel={soundOn ? 'Sonido activado. Tocar para silenciar' : 'Sonido apagado. Tocar para activar'}
         >
-          {soundOn ? <SoundOnIcon className="w-4 h-4" /> : <SoundOffIcon className="w-4 h-4" />}
+          {soundOn ? <SoundOnIcon className="w-5 h-5" /> : <SoundOffIcon className="w-5 h-5" />}
         </IconBtn>
         <IconBtn
           onClick={onOpenSettings}
-          ariaLabel="Open settings and dev tools"
+          ariaLabel="Ajustes"
         >
-          <GearIcon className="w-4 h-4" />
+          <GearIcon className="w-5 h-5" />
         </IconBtn>
       </div>
     </motion.header>
@@ -145,28 +122,14 @@ function IconBtn({
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="group relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#2b2138]/10 bg-[#fffaf2] text-[#2b2138] shadow-sm transition active:translate-y-px hover:bg-[#ffe8d0]"
+      className="group relative inline-flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink bg-paper text-ink transition active:translate-y-px hover:bg-[#ffe8d0]"
     >
       {children}
     </button>
   );
 }
 
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 type I = { className?: string };
-
-function NetworkIcon({ className }: I) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12.55a11 11 0 0 1 14.08 0" />
-      <path d="M8.5 16.5a6 6 0 0 1 7 0" />
-      <circle cx="12" cy="20" r="1" />
-    </svg>
-  );
-}
 
 function SoundOnIcon({ className }: I) {
   return (

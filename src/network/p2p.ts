@@ -1,37 +1,19 @@
-import { joinRoom, selfId, type Room } from 'trystero/nostr';
+import { joinRoom, type Room } from 'trystero/nostr';
+import {
+  PROTOCOL_VERSION,
+  parseGift,
+  parseInteraction,
+  parsePetSync,
+  type GiftKind,
+  type InteractionKind,
+  type P2PGift,
+  type P2PInteraction,
+  type PetStatsBroadcast,
+  type PetSyncData,
+} from './protocol';
+import { getPlayerId } from './invite';
 
-export interface PetStatsBroadcast {
-  name: string;
-  stage: string;
-  hunger: number;
-  happiness: number;
-  energy: number;
-  hygiene: number;
-  health: number;
-  isAsleep: boolean;
-  streak?: number;
-  habitsCompleted?: number;
-  habitsTotal?: number;
-}
-
-export type PetSyncData = PetStatsBroadcast & {
-  senderId: string;
-  updatedAt: number;
-};
-
-export interface P2PGift {
-  senderId: string;
-  senderName: string;
-  kind: 'berry' | 'snack' | 'toy' | 'medicine';
-  timestamp: number;
-}
-
-export interface P2PInteraction {
-  senderId: string;
-  senderName: string;
-  action: 'visit' | 'pet' | 'cheer';
-  timestamp: number;
-}
+export type { PetStatsBroadcast, PetSyncData, P2PGift, P2PInteraction, GiftKind, InteractionKind };
 
 export interface P2PCallbacks {
   onPeerJoin: (peerId: string) => void;
@@ -41,90 +23,86 @@ export interface P2PCallbacks {
   onReceiveInteraction: (interaction: P2PInteraction, peerId: string) => void;
 }
 
+type Sender = (data: unknown) => Promise<void>;
+
 let activeRoom: Room | null = null;
-let currentSendState: ((data: PetSyncData) => Promise<void>) | null = null;
-let currentSendGift: ((gift: P2PGift) => Promise<void>) | null = null;
-let currentSendInteraction: ((interaction: P2PInteraction) => Promise<void>) | null = null;
+let sendState: Sender | null = null;
+let sendGift: Sender | null = null;
+let sendInteraction: Sender | null = null;
 
-export const myPeerId = selfId;
+export const myPlayerId = getPlayerId();
 
+/**
+ * Joins a Trystero room over public Nostr relays (no server of our own).
+ * The room code doubles as the password that encrypts the WebRTC handshake.
+ */
 export function connectP2P(roomId: string, callbacks: P2PCallbacks): void {
   disconnectP2P();
 
-  const appId = 'pixel-pet-nostr-p2p';
-  const room = joinRoom({ appId }, roomId);
+  const room = joinRoom(
+    { appId: 'pixel-pet-nostr-p2p', password: `tama:${roomId}`, maxReceiveBytes: 64 * 1024 },
+    roomId,
+  );
   activeRoom = room;
 
-  // Use makeAction without strict generic constraint issue
   const stateAction = room.makeAction('petState');
   const giftAction = room.makeAction('petGift');
   const interactionAction = room.makeAction('petInteraction');
 
-  currentSendState = (data) => stateAction.send(data as unknown as Record<string, string | number | boolean>);
-  currentSendGift = (gift) => giftAction.send(gift as unknown as Record<string, string | number | boolean>);
-  currentSendInteraction = (interaction) => interactionAction.send(interaction as unknown as Record<string, string | number | boolean>);
+  // Payloads are plain JSON objects; Trystero's JsonValue type wants an index signature.
+  sendState = (d) => stateAction.send(d as never);
+  sendGift = (d) => giftAction.send(d as never);
+  sendInteraction = (d) => interactionAction.send(d as never);
 
-  room.onPeerJoin = (peerId: string) => {
-    callbacks.onPeerJoin(peerId);
+  room.onPeerJoin = (peerId) => callbacks.onPeerJoin(peerId);
+  room.onPeerLeave = (peerId) => callbacks.onPeerLeave(peerId);
+
+  stateAction.onMessage = (data, { peerId }) => {
+    const parsed = parsePetSync(data);
+    if (parsed && parsed.playerId !== myPlayerId) callbacks.onReceiveState(parsed, peerId);
   };
-
-  room.onPeerLeave = (peerId: string) => {
-    callbacks.onPeerLeave(peerId);
+  giftAction.onMessage = (data, { peerId }) => {
+    const parsed = parseGift(data);
+    if (parsed) callbacks.onReceiveGift(parsed, peerId);
   };
-
-  stateAction.onMessage = (data: unknown, context: { peerId: string }) => {
-    callbacks.onReceiveState(data as PetSyncData, context.peerId);
-  };
-
-  giftAction.onMessage = (gift: unknown, context: { peerId: string }) => {
-    callbacks.onReceiveGift(gift as P2PGift, context.peerId);
-  };
-
-  interactionAction.onMessage = (interaction: unknown, context: { peerId: string }) => {
-    callbacks.onReceiveInteraction(interaction as P2PInteraction, context.peerId);
+  interactionAction.onMessage = (data, { peerId }) => {
+    const parsed = parseInteraction(data);
+    if (parsed) callbacks.onReceiveInteraction(parsed, peerId);
   };
 }
 
-export function broadcastMyState(data: PetStatsBroadcast): void {
-  if (!currentSendState || !activeRoom) return;
+export function broadcastMyState(data: Omit<PetStatsBroadcast, 'playerId'>): void {
+  if (!sendState) return;
   const payload: PetSyncData = {
     ...data,
-    senderId: myPeerId,
+    playerId: myPlayerId,
+    v: PROTOCOL_VERSION,
     updatedAt: Date.now(),
   };
-  currentSendState(payload).catch(() => {});
+  sendState(payload).catch(() => {});
 }
 
-export function sendP2PGift(giftKind: P2PGift['kind'], senderName: string): void {
-  if (!currentSendGift || !activeRoom) return;
-  const payload: P2PGift = {
-    senderId: myPeerId,
-    senderName,
-    kind: giftKind,
-    timestamp: Date.now(),
-  };
-  currentSendGift(payload).catch(() => {});
+export function sendP2PGift(kind: GiftKind, senderName: string): void {
+  if (!sendGift) return;
+  const payload: P2PGift = { playerId: myPlayerId, senderName, kind, timestamp: Date.now() };
+  sendGift(payload).catch(() => {});
 }
 
-export function sendP2PInteraction(action: P2PInteraction['action'], senderName: string): void {
-  if (!currentSendInteraction || !activeRoom) return;
-  const payload: P2PInteraction = {
-    senderId: myPeerId,
-    senderName,
-    action,
-    timestamp: Date.now(),
-  };
-  currentSendInteraction(payload).catch(() => {});
+export function sendP2PInteraction(action: InteractionKind, senderName: string): void {
+  if (!sendInteraction) return;
+  const payload: P2PInteraction = { playerId: myPlayerId, senderName, action, timestamp: Date.now() };
+  sendInteraction(payload).catch(() => {});
 }
 
 export function disconnectP2P(): void {
-  if (activeRoom) {
-    try {
-      activeRoom.leave();
-    } catch {}
-    activeRoom = null;
-    currentSendState = null;
-    currentSendGift = null;
-    currentSendInteraction = null;
+  if (!activeRoom) return;
+  try {
+    void activeRoom.leave();
+  } catch {
+    /* already gone */
   }
+  activeRoom = null;
+  sendState = null;
+  sendGift = null;
+  sendInteraction = null;
 }

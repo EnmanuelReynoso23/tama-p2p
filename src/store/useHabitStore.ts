@@ -1,5 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import {
+  bestStreak as computeBest,
+  currentStreak as computeCurrent,
+  dayKey,
+  daysFromLegacy,
+  markDay,
+  normalizeDays,
+  unmarkDay,
+} from '../game/streak';
 
 export interface DailyHabit {
   id: string;
@@ -9,30 +18,20 @@ export interface DailyHabit {
 }
 
 export interface HabitStoreState {
+  /** Local day ("YYYY-MM-DD") the `completed` flags belong to. */
+  habitsDay: string;
+  habits: DailyHabit[];
+  /** Days where every habit was completed — the source of truth for streaks. */
+  completedDays: string[];
+  /** Cached from completedDays so components can subscribe cheaply. */
   currentStreak: number;
   bestStreak: number;
-  lastActiveDate: string; // YYYY-MM-DD
-  habits: DailyHabit[];
-  sharedStreak: number;
-  friendCompletedToday: boolean;
 
   // Acciones
   toggleHabit: (id: string) => void;
   addHabit: (title: string, category?: DailyHabit['category']) => void;
   deleteHabit: (id: string) => void;
   checkAndResetDay: () => void;
-  setFriendStatus: (completed: boolean, remoteStreak: number) => void;
-}
-
-function getTodayString(): string {
-  const now = new Date();
-  return now.toISOString().split('T')[0];
-}
-
-function getYesterdayString(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
 }
 
 const DEFAULT_HABITS: DailyHabit[] = [
@@ -42,95 +41,104 @@ const DEFAULT_HABITS: DailyHabit[] = [
   { id: 'h-4', title: 'Descansar la vista y estirar', category: 'health', completed: false },
 ];
 
+function allDone(habits: readonly DailyHabit[]): boolean {
+  return habits.length > 0 && habits.every((h) => h.completed);
+}
+
+/** Recompute today's entry in the history + cached streak numbers. */
+function withStreak(
+  habits: DailyHabit[],
+  prev: Pick<HabitStoreState, 'completedDays' | 'bestStreak'>,
+  today: string,
+) {
+  const completedDays = allDone(habits)
+    ? markDay(prev.completedDays, today)
+    : unmarkDay(prev.completedDays, today);
+  const current = computeCurrent(completedDays, today);
+  return {
+    habits,
+    completedDays,
+    currentStreak: current,
+    // History is capped, so never let the record go down.
+    bestStreak: Math.max(prev.bestStreak, computeBest(completedDays)),
+  };
+}
+
 export const useHabitStore = create<HabitStoreState>()(
   persist(
     (set, get) => ({
-      currentStreak: 1,
-      bestStreak: 1,
-      lastActiveDate: getTodayString(),
+      habitsDay: dayKey(),
       habits: DEFAULT_HABITS,
-      sharedStreak: 1,
-      friendCompletedToday: false,
+      completedDays: [],
+      currentStreak: 0,
+      bestStreak: 0,
 
       toggleHabit: (id: string) => {
-        const today = getTodayString();
-        const state = get();
-        state.checkAndResetDay();
-
-        const updatedHabits = get().habits.map((h) =>
-          h.id === id ? { ...h, completed: !h.completed } : h
+        get().checkAndResetDay();
+        const today = dayKey();
+        const habits = get().habits.map((h) =>
+          h.id === id ? { ...h, completed: !h.completed } : h,
         );
-
-        const allCompleted = updatedHabits.length > 0 && updatedHabits.every((h) => h.completed);
-        let newStreak = get().currentStreak;
-        let newBest = get().bestStreak;
-
-        // Si hoy se completaron todos y ayer estaba activo
-        if (allCompleted && get().lastActiveDate !== today) {
-          if (get().lastActiveDate === getYesterdayString()) {
-            newStreak += 1;
-          } else {
-            newStreak = 1;
-          }
-          if (newStreak > newBest) newBest = newStreak;
-        }
-
-        set({
-          habits: updatedHabits,
-          currentStreak: newStreak,
-          bestStreak: newBest,
-          lastActiveDate: today,
-        });
+        set(withStreak(habits, get(), today));
       },
 
       addHabit: (title: string, category: DailyHabit['category'] = 'custom') => {
         if (!title.trim()) return;
+        get().checkAndResetDay();
         const newHabit: DailyHabit = {
           id: 'h-' + Date.now().toString(36),
-          title: title.trim(),
+          title: title.trim().slice(0, 60),
           category,
           completed: false,
         };
-        set((state) => ({
-          habits: [...state.habits, newHabit],
-        }));
+        set(withStreak([...get().habits, newHabit], get(), dayKey()));
       },
 
       deleteHabit: (id: string) => {
-        set((state) => ({
-          habits: state.habits.filter((h) => h.id !== id),
-        }));
+        get().checkAndResetDay();
+        set(withStreak(get().habits.filter((h) => h.id !== id), get(), dayKey()));
       },
 
       checkAndResetDay: () => {
-        const today = getTodayString();
-        const yesterday = getYesterdayString();
-        const { lastActiveDate, currentStreak } = get();
-
-        if (lastActiveDate !== today) {
-          // Si ha pasado mas de un dia sin actividad, la racha se reinicia a 0
-          const brokeStreak = lastActiveDate !== yesterday && lastActiveDate !== '';
-          set({
-            habits: get().habits.map((h) => ({ ...h, completed: false })),
-            currentStreak: brokeStreak ? 0 : currentStreak,
-            friendCompletedToday: false,
-          });
+        const today = dayKey();
+        const { habitsDay, completedDays } = get();
+        if (habitsDay === today) {
+          // Still refresh the cached counter: it can drop at midnight.
+          const current = computeCurrent(completedDays, today);
+          if (current !== get().currentStreak) set({ currentStreak: current });
+          return;
         }
-      },
-
-      setFriendStatus: (completed: boolean, remoteStreak: number) => {
-        set((state) => {
-          const myAllDone = state.habits.length > 0 && state.habits.every((h) => h.completed);
-          const bothDone = myAllDone && completed;
-          return {
-            friendCompletedToday: completed,
-            sharedStreak: bothDone ? Math.max(state.currentStreak, remoteStreak) : state.sharedStreak,
-          };
+        set({
+          habitsDay: today,
+          habits: get().habits.map((h) => ({ ...h, completed: false })),
+          currentStreak: computeCurrent(completedDays, today),
         });
       },
     }),
     {
       name: 'tamagotchi-habits-storage',
-    }
-  )
+      version: 2,
+      migrate: (persisted, version) => {
+        const old = (persisted ?? {}) as Record<string, unknown>;
+        if (version < 2) {
+          const legacyDays = daysFromLegacy(
+            Number(old.currentStreak) || 0,
+            typeof old.lastActiveDate === 'string' ? old.lastActiveDate : undefined,
+          );
+          const today = dayKey();
+          return {
+            habits: Array.isArray(old.habits) ? (old.habits as DailyHabit[]) : DEFAULT_HABITS,
+            habitsDay: typeof old.lastActiveDate === 'string' ? old.lastActiveDate : today,
+            completedDays: legacyDays,
+            currentStreak: computeCurrent(legacyDays, today),
+            bestStreak: Math.max(computeBest(legacyDays), Number(old.bestStreak) || 0),
+          } as Partial<HabitStoreState>;
+        }
+        return { ...old, completedDays: normalizeDays((old.completedDays as string[]) ?? []) } as Partial<HabitStoreState>;
+      },
+      onRehydrateStorage: () => (state) => {
+        state?.checkAndResetDay();
+      },
+    },
+  ),
 );
