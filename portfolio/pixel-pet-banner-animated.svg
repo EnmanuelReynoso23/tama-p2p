@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" role="img" aria-label="Pixel Pet — Virtual browser pet. Click to play."
+     onclick="window.open('https://pixel-pet-nine.vercel.app/','_blank','noopener,noreferrer')" style="cursor:pointer">
+  <style>
+    @keyframes petBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    @keyframes eyelids { 0%,92%,100% { transform: scaleY(0); } 95% { transform: scaleY(1); } }
+    @keyframes zzFloat {
+      0% { transform: translate(0, 40px); opacity: 0; }
+      20% { opacity: 0.9; }
+      100% { transform: translate(40px, -30px); opacity: 0; }
+    }
+    @keyframes sparklePulse { 0%,100% { opacity: 0.25; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+    @keyframes shine { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+    .pet { transform-box: fill-box; transform-origin: center; animation: petBob 2.4s ease-in-out infinite; }
+    .eyelids { transform-box: fill-box; transform-origin: center; animation: eyelids 4s ease-in-out infinite; fill: #2b2138; }
+    .z { font-family: "'Courier New', monospace"; font-weight: 900; fill: #ffffff; transform-box: fill-box; }
+    .z1 { animation: zzFloat 3.2s linear 0s infinite; }
+    .z2 { animation: zzFloat 3.2s linear 1.1s infinite; }
+    .z3 { animation: zzFloat 3.2s linear 2.15s infinite; }
+    .sparkle { transform-box: fill-box; transform-origin: center; fill: #c9b6ff; animation: sparklePulse 1.6s ease-in-out infinite; }
+    .shine { animation: shine 3.4s linear infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .pet, .eyelids, .z, .sparkle, .shine { animation: none !important; }
+    }
+  </style>
+
+  <defs>
+    <linearGradient id="bannerBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"   stop-color="#f7a8c4"/>
+      <stop offset="0.55" stop-color="#c9b6ff"/>
+      <stop offset="1"   stop-color="#7ec8e3"/>
+    </linearGradient>
+    <linearGradient id="screenBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#9fd3e6"/>
+      <stop offset="1"   stop-color="#ffe19a"/>
+    </linearGradient>
+    <clipPath id="screenClip">
+      <rect x="0" y="0" width="420" height="220" rx="18"/>
+    </clipPath>
+    <linearGradient id="pillGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff6b8a"/>
+      <stop offset="1" stop-color="#ff8a5f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Banner back -->
+  <rect width="900" height="280" rx="24" fill="url(#bannerBg)"/>
+  <!-- Background sparkles -->
+  <g>
+    <circle class="sparkle" cx="70"  cy="50"  r="3" style="animation-delay: 0s"/>
+    <circle class="sparkle" cx="830" cy="60"  r="2" style="animation-delay: 0.2s; fill: #ffd447"/>
+    <circle class="sparkle" cx="100" cy="230" r="2" style="animation-delay: 0.5s"/>
+    <circle class="sparkle" cx="800" cy="210" r="3" style="animation-delay: 0.8s; fill: #ffffff"/>
+  </g>
+
+  <!-- Left: Text CTA -->
+  <g font-family="'Inter', ui-sans-serif, system-ui" fill="#2b2138">
+    <text x="48" y="70"  font-family="'Courier New', monospace" font-weight="900" font-size="40" letter-spacing="2">PIXEL·PET</text>
+    <text x="48" y="106" font-size="20" font-weight="600">A tiny Tamagotchi for your browser.</text>
+    <text x="48" y="136" font-size="18" font-weight="500" fill="#4d3f62">Hatch · Feed · Play · Sleep — 5 stages → 3 adult variants.</text>
+
+    <!-- Play pill -->
+    <g transform="translate(48, 166)">
+      <rect width="300" height="60" rx="30" fill="url(#pillGrad)"/>
+      <text x="30" y="39" font-size="22" font-weight="800" fill="#ffffff">▶ PLAY NOW · pixel-pet-nine.vercel.app</text>
+      <!-- shine sweep -->
+      <g clip-path="url(#screenClip)"><!-- reuse arbitrary clip; oversized rect leaks no-big-deal --></g>
+      <rect x="-60" y="0" width="50" height="60" fill="white" opacity="0.25" class="shine"/>
+    </g>
+
+    <!-- Small link row -->
+    <g transform="translate(48, 250)" font-size="13" font-weight="700">
+      <text fill="#2b2138">SOURCE</text>
+      <text x="76" fill="#4d3f62">github.com/laleet008/pixel-pet</text>
+    </g>
+  </g>
+
+  <!-- Right: Pet portrait inside rounded device-window -->
+  <g transform="translate(440, 30)">
+    <rect x="0" y="0" width="420" height="220" rx="22" fill="#2b2138"/>
+    <g clip-path="url(#screenClip)">
+      <rect x="10" y="10" width="400" height="200" rx="12" fill="url(#screenBg)"/>
+      <!-- clouds -->
+      <g fill="#ffffff" opacity="0.94">
+        <rect x="40" y="40" width="70" height="12" rx="6"/>
+        <rect x="260" y="28" width="90" height="12" rx="6"/>
+      </g>
+      <!-- hills + ground -->
+      <path d="M0,160 C 80,100 160,170 240,140 S 420,150 420,200 L 420,220 L 0,220 Z" fill="#9bd66f"/>
+      <rect y="198" width="420" height="22" fill="#5ea84c"/>
+      <!-- House -->
+      <g transform="translate(40, 100)">
+        <rect width="54" height="60" fill="#c9b6ff"/>
+        <polygon points="0,0 27,-20 54,0" fill="#e085a6"/>
+        <rect x="20" y="30" width="14" height="14" fill="#ffd447" stroke="#2b2138" stroke-width="2"/>
+      </g>
+
+      <!-- Radiant Adult pet (animated) scaled 6x (16*6=96) -->
+      <g class="pet" transform="translate(162, 70)">
+        <g transform="scale(6)">
+          <!-- 16x16 adult-radiant sprite (same colors as thumbnail) -->
+          <rect x="3" y="0" width="10" height="1" fill="#2b2138"/>
+          <rect x="2" y="1" width="12" height="1" fill="#2b2138"/>
+          <rect x="4" y="1" width="8"  height="1" fill="#e085a6"/>
+          <rect x="1" y="2" width="14" height="1" fill="#2b2138"/>
+          <rect x="3" y="2" width="10" height="1" fill="#f7a8c4"/>
+          <rect x="6" y="2" width="2"  height="1" fill="#f7d5e0"/>
+          <rect x="1" y="3" width="14" height="1" fill="#2b2138"/>
+          <rect x="3" y="3" width="10" height="1" fill="#f7a8c4"/>
+          <rect x="4" y="3" width="2"  height="1" fill="#7ec8e3"/>
+          <rect x="10" y="3" width="2" height="1" fill="#7ec8e3"/>
+          <rect x="4" y="3" width="1"  height="1" fill="#ffffff"/>
+          <rect x="10" y="3" width="1" height="1" fill="#ffffff"/>
+          <rect x="1" y="4" width="14" height="1" fill="#2b2138"/>
+          <rect x="2" y="4" width="12" height="1" fill="#f7a8c4"/>
+          <!-- eyelids blink (cover the eye pupils every ~4s) -->
+          <rect class="eyelids" x="4" y="3" width="2" height="2"/>
+          <rect class="eyelids" x="10" y="3" width="2" height="2"/>
+          <rect x="2" y="5" width="12" height="1" fill="#2b2138"/>
+          <rect x="3" y="5" width="10" height="1" fill="#f7a8c4"/>
+          <rect x="2" y="5" width="2"  height="1" fill="#ff6b8a"/>
+          <rect x="12" y="5" width="2" height="1" fill="#ff6b8a"/>
+          <rect x="7" y="5" width="2"  height="1" fill="#2b2138"/>
+          <rect x="2" y="6" width="12" height="1" fill="#2b2138"/>
+          <rect x="3" y="6" width="10" height="1" fill="#f7a8c4"/>
+          <rect x="6" y="6" width="4"  height="1" fill="#e94c5a"/>
+          <rect x="3" y="7" width="10" height="1" fill="#2b2138"/>
+          <rect x="4" y="7" width="8"  height="1" fill="#f7a8c4"/>
+          <rect x="2" y="8" width="12" height="1" fill="#2b2138"/>
+          <rect x="3" y="8" width="10" height="1" fill="#f7a8c4"/>
+          <rect x="1" y="9" width="14" height="1" fill="#2b2138"/>
+          <rect x="2" y="9" width="12" height="1" fill="#f7a8c4"/>
+          <rect x="0" y="10" width="16" height="1" fill="#2b2138"/>
+          <rect x="1" y="10" width="14" height="1" fill="#f7a8c4"/>
+          <rect x="5" y="10" width="6"  height="1" fill="#f7d5e0"/>
+          <rect x="0" y="11" width="16" height="1" fill="#2b2138"/>
+          <rect x="1" y="11" width="14" height="1" fill="#f7a8c4"/>
+          <rect x="1" y="12" width="6" height="1" fill="#2b2138"/>
+          <rect x="9" y="12" width="6" height="1" fill="#2b2138"/>
+          <rect x="2" y="12" width="4" height="1" fill="#e085a6"/>
+          <rect x="10" y="12" width="4" height="1" fill="#e085a6"/>
+        </g>
+        <!-- Sparkle trail around pet head -->
+        <circle class="sparkle" cx="-10" cy="-2"  r="3" style="animation-delay: 0.0s; fill: #ffd447"/>
+        <circle class="sparkle" cx="106" cy="6"  r="2" style="animation-delay: 0.5s"/>
+        <circle class="sparkle" cx="84"  cy="-14" r="2" style="animation-delay: 1.0s; fill: #ffffff"/>
+      </g>
+
+      <!-- Floating Zs (night-mode flair) in top-right corner of screen -->
+      <g transform="translate(330, 40)" font-size="20">
+        <text class="z z1" x="0"   y="0">Z</text>
+        <text class="z z2" x="10"  y="10" fill="#fff7d3">Z</text>
+        <text class="z z3" x="-4"  y="20">z</text>
+      </g>
+    </g>
+
+    <!-- Device button bar -->
+    <g transform="translate(14, 236)" font-family="'Courier New', monospace" font-size="11" font-weight="800" fill="#ffffff">
+      <g><rect width="72" height="28" rx="8" fill="#ff6b8a"/><text x="14" y="19">FEED</text></g>
+      <g transform="translate(84,0)"><rect width="72" height="28" rx="8" fill="#c9b6ff"/><text x="12" y="19" fill="#2b2138">PLAY</text></g>
+      <g transform="translate(168,0)"><rect width="72" height="28" rx="8" fill="#88d498"/><text x="8"  y="19" fill="#2b2138">CLEAN</text></g>
+      <g transform="translate(252,0)"><rect width="72" height="28" rx="8" fill="#3e8fb8"/><text x="12" y="19">SLEEP</text></g>
+    </g>
+  </g>
+</svg>
