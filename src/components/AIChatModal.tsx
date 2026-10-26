@@ -19,10 +19,12 @@ export default function AIChatModal({ onClose }: Props) {
   const currentStreak = useHabitStore((s) => s.currentStreak);
   const habits = useHabitStore((s) => s.habits);
   const peers = useP2PStore((s) => s.peers);
-  const remotePets = useP2PStore((s) => s.remotePets);
+  const peerToPlayer = useP2PStore((s) => s.peerToPlayer);
+  const friends = useP2PStore((s) => s.friends);
 
   const habitsCompleted = habits.filter((h) => h.completed).length;
-  const firstRemotePet = Object.values(remotePets)[0];
+  const firstOnlineId = Object.values(peerToPlayer)[0];
+  const firstRemotePet = firstOnlineId ? friends[firstOnlineId]?.pet : undefined;
 
   const companionCtx = {
     petName,

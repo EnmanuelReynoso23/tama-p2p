@@ -14,6 +14,7 @@ import {
   STORAGE_VERSION,
   DEFAULT_SETTINGS,
   STAT_MAX,
+  LIFE_STAGES,
   type AdultVariant,
   type LifeStage,
   type TimeSpeed,
@@ -361,6 +362,10 @@ export const usePetStore = create<PetState>()(
         }
 
         if (expected === state.stage) return;
+
+        // Pets never devolve. New pets start as 'child' while the age-based stage
+        // is still 'egg' — without this guard EVOLVE fired every tick (endless flash).
+        if (state.hatched && LIFE_STAGES.indexOf(expected) < LIFE_STAGES.indexOf(state.stage)) return;
 
         if (state.hatched && state.stage !== 'adult') {
           // Baby→Child→Teen→Adult: route through EVOLVE transient for flash/particles.

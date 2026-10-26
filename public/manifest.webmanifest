@@ -1,0 +1,36 @@
+{
+  "id": "/",
+  "name": "Pixel Pet · Racha con amigos",
+  "short_name": "Pixel Pet",
+  "description": "Tu mascota pixel art: cumple tus hábitos y mantén la racha con tus amigos, conectados P2P.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#fbf5ea",
+  "theme_color": "#f4b8c0",
+  "categories": ["games", "lifestyle", "health"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis hábitos",
+      "short_name": "Hábitos",
+      "url": "/?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Modo máquina (Raspberry Pi)",
+      "short_name": "Máquina",
+      "url": "/?modo=maquina",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

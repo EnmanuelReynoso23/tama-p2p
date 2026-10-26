@@ -1,5 +1,9 @@
 # 🥚 Pixel Pet · MODEL PP-01
 
+> 📱 **Nuevo:** app instalable (PWA) desde un enlace, racha con amigos P2P y modo maquinita
+> para Raspberry Pi. Plan y capturas: [`docs/PLAN-MOVIL-PWA.md`](docs/PLAN-MOVIL-PWA.md) ·
+> Instalación en la Pi: [`machine/README.md`](machine/README.md).
+
 A hand-held, pixel-art Tamagotchi-style browser portfolio. Your pet hatches from an egg, grows through 5 life-stages with 3 adult variants, and tells you exactly how it feels — stats decay in real time (or via 72-hour offline catch-up), day/night cycles paint the scene, and a rAF 60fps canvas renders every pixel.
 
 ## ✨ Features

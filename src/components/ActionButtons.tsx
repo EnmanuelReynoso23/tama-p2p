@@ -76,12 +76,12 @@ export default function ActionButtons() {
       {/* FEED */}
       <div className="relative" ref={popoverRef}>
         <RoundButton
-          label="Feed"
+          label="Comer"
           icon={FeedIcon}
           onClick={onFeedClick}
           disabled={feedDisabled}
           cdPct={feedCdPct}
-          ariaLabel={`Feed — press F. ${isAsleep ? 'Pet is asleep (do not disturb)' : feedDisabled ? 'on cooldown' : 'choose meal or snack'}`}
+          ariaLabel={`Comer (tecla F). ${isAsleep ? 'Está dormida, no molestar' : feedDisabled ? 'Espera un momento' : 'Elige comida o snack'}`}
           hotkey="F"
         />
         <AnimatePresence>
@@ -100,8 +100,8 @@ export default function ActionButtons() {
               >
                 <MealIcon className="w-4 h-4" />
                 <div className="flex flex-col">
-                  <span className="font-pixel text-[10px] text-[#2b2138]">Meal</span>
-                  <span className="font-sans text-[9px] text-[#6b4a80]">Hunger +30</span>
+                  <span className="font-pixel text-[10px] text-[#2b2138]">Comida</span>
+                  <span className="font-sans text-xs text-[#6b4a80]">Hambre +30</span>
                 </div>
               </PopItem>
               <PopItem
@@ -112,7 +112,7 @@ export default function ActionButtons() {
                 <SnackIcon className="w-4 h-4" />
                 <div className="flex flex-col">
                   <span className="font-pixel text-[10px] text-[#2b2138]">Snack</span>
-                  <span className="font-sans text-[9px] text-[#6b4a80]">Happy +10</span>
+                  <span className="font-sans text-xs text-[#6b4a80]">Felicidad +10</span>
                 </div>
               </PopItem>
             </motion.div>
@@ -122,7 +122,7 @@ export default function ActionButtons() {
 
       {/* PLAY */}
       <RoundButton
-        label="Play"
+        label="Jugar"
         icon={PlayIcon}
         onClick={() => {
           if (playDisabled || isAsleep) { sfxRefuse(); return; }
@@ -131,13 +131,13 @@ export default function ActionButtons() {
         }}
         disabled={playDisabled || isAsleep}
         cdPct={0}
-        ariaLabel={`Play — press P. ${playDisabled ? 'Pet is too tired (energy < 15)' : isAsleep ? 'Pet is asleep' : 'Start the berry mini-game'}`}
+        ariaLabel={`Jugar (tecla P). ${playDisabled ? 'Está muy cansada (energía baja)' : isAsleep ? 'Está dormida' : 'Minijuego de atrapar bayas'}`}
         hotkey="P"
       />
 
       {/* CLEAN */}
       <RoundButton
-        label="Clean"
+        label="Bañar"
         icon={CleanIcon}
         onClick={() => {
           if (isAsleep) { sfxRefuse(); return; }
@@ -147,13 +147,13 @@ export default function ActionButtons() {
         }}
         disabled={cleanLeft > 0 || stats.hygiene >= STAT_MAX - 0.1 || isAsleep}
         cdPct={cleanLeft}
-        ariaLabel={`Clean — press C. ${isAsleep ? 'Pet is asleep (do not disturb)' : cleanLeft > 0 ? 'on cooldown' : stats.hygiene >= STAT_MAX - 0.1 ? 'Pet is already clean' : 'Give the pet a bath'}`}
+        ariaLabel={`Bañar (tecla C). ${isAsleep ? 'Está dormida, no molestar' : cleanLeft > 0 ? 'Espera un momento' : stats.hygiene >= STAT_MAX - 0.1 ? 'Ya está limpia' : 'Darle un baño'}`}
         hotkey="C"
       />
 
       {/* SLEEP / WAKE */}
       <RoundButton
-        label={isAsleep ? 'Wake' : 'Sleep'}
+        label={isAsleep ? 'Despertar' : 'Dormir'}
         icon={isAsleep ? WakeIcon : SleepIcon}
         onClick={() => {
           sfxButton();
@@ -161,7 +161,7 @@ export default function ActionButtons() {
         }}
         disabled={false}
         cdPct={0}
-        ariaLabel={`${isAsleep ? 'Wake pet — 3 clicks needed' : 'Put pet to sleep'} — press S`}
+        ariaLabel={`${isAsleep ? 'Despertar: toca 3 veces seguidas' : 'Mandar a dormir'} (tecla S)`}
         hotkey="S"
       />
 
@@ -181,7 +181,7 @@ export default function ActionButtons() {
               sfxMedicine();
             }}
             type="button"
-            aria-label="Give Medicine (pet is sick)"
+            aria-label="Dar medicina (está enferma)"
             className="chunky-btn absolute -top-14 right-0 h-12 w-12 rounded-full border-2 border-[#a0b080] bg-[#d6e8c0] text-[#3b6b43] shadow-btn-press font-pixel text-[9px] flex items-center justify-center gap-1"
             style={{ animation: 'pp-pulse 1.4s ease-in-out infinite' }}
           >
@@ -226,7 +226,7 @@ function RoundButton({
       aria-label={ariaLabel}
       title={hotkey ? `${label} (${hotkey})` : label}
       className={[
-        'chunky-btn group relative aspect-square flex flex-col items-center justify-center bg-[#f7a8c4] text-rose-900/80 select-none',
+        'chunky-btn group relative aspect-square min-h-[64px] flex flex-col items-center justify-center border-2 border-ink bg-[#fbd3df] text-ink select-none',
         disabled ? 'opacity-60 cursor-not-allowed' : '',
       ].join(' ')}
     >
@@ -241,10 +241,10 @@ function RoundButton({
         />
       ) : null}
 
-      <Icon className="w-5 h-5" />
-      <span className="font-pixel text-[9px] sm:text-[10px] mt-0.5">{label}</span>
+      <Icon className="w-6 h-6" />
+      <span className="font-ui font-extrabold text-[12px] leading-none mt-1">{label}</span>
       {hotkey ? (
-        <span className="sr-only">Keyboard shortcut: {hotkey}</span>
+        <span className="sr-only">Atajo de teclado: {hotkey}</span>
       ) : null}
     </button>
   );

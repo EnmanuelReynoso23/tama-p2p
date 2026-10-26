@@ -8,6 +8,14 @@ export default {
         ui: ['Nunito', 'system-ui', 'sans-serif'],
       },
       colors: {
+        // Mobile UI tokens (text colours pass WCAG AA on cream/paper)
+        ink: '#2b2138',
+        cream: '#fbf5ea',
+        paper: '#fffaf2',
+        blush: '#ffd6e0',
+        mint: '#d8f3dc',
+        lilac: '#6b4a80',
+        flame: { DEFAULT: '#ff7a1a', text: '#b93d00', soft: '#ffe5d0' },
         device: {
           shell: '#f4b8c0',
           shellDark: '#d89098',

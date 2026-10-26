@@ -27,7 +27,7 @@ export default function Toasts() {
       role="status"
       aria-live="polite"
       aria-atomic="false"
-      className="pointer-events-none fixed z-40 left-1/2 bottom-6 -translate-x-1/2 w-[min(92vw,360px)] flex flex-col gap-2 items-center"
+      className="pointer-events-none fixed z-[70] left-1/2 top-[calc(env(safe-area-inset-top)+12px)] -translate-x-1/2 w-[min(92vw,380px)] flex flex-col gap-2 items-center"
     >
       <AnimatePresence initial={false}>
         {toasts.slice(0, 3).map((t, idx) => (
@@ -88,6 +88,6 @@ function toneEmoji(t: WelcomeToast['tone']) {
     case 'warn':
       return '⚠️';
     default:
-      return '[*]';
+      return '💌';
   }
 }

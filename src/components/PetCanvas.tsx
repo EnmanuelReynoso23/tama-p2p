@@ -57,7 +57,7 @@ type StageAnimName =
   | RadiantAnimationName | ChillAnimationName | ScruffyAnimationName
   | 'wobble' | 'crack1' | 'crack2' | 'hatching_hatched';
 
-interface StageBundle {
+export interface StageBundle {
   readonly frameW: number;
   readonly frameH: number;
   readonly animations: { readonly [k: string]: { readonly frames: readonly (readonly string[])[]; readonly frameTime: number } };
@@ -75,7 +75,7 @@ function resolveAnimName(anim: PetAnim, hatchProgress?: number): StageAnimName {
   return anim as StageAnimName;
 }
 
-function bundleFor(stage: LifeStage, variant: AdultVariant | null): StageBundle {
+export function bundleFor(stage: LifeStage, variant: AdultVariant | null): StageBundle {
   if (stage === 'egg') {
     return {
       frameW: EGG_FRAME_W, frameH: EGG_FRAME_H,
