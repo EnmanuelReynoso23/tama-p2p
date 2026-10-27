@@ -1,0 +1,13 @@
+[Unit]
+Description=Pixel Pet - botones GPIO como teclas A/S/D
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/tama/gpio-keys.py
+Restart=always
+RestartSec=2
+# Cambia los pines aquí si usas otros:
+# Environment=TAMA_PIN_A=17 TAMA_PIN_S=27 TAMA_PIN_D=22
+
+[Install]
+WantedBy=multi-user.target

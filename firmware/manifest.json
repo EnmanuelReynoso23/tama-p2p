@@ -1,0 +1,65 @@
+{
+	"include": [
+		"$(MODDABLE)/examples/manifest_base.json",
+		"$(MODDABLE)/examples/manifest_commodetto.json",
+		"$(MODDABLE)/examples/manifest_net.json",
+		"$(MODULES)/io/storage/manifest.json",
+		"$(MODULES)/io/mqtt/client"
+	],
+	"modules": {
+		"*": [
+			"./main"
+		],
+		"animo-screen": "./screen",
+		"animo-net": "./net",
+		"animo-core": "../core/animo",
+		"animo-sprites": "../core/sprites",
+		"animo-relay": "../core/relay"
+	},
+	"resources": {
+		"*-mask": "$(MODDABLE)/examples/assets/fonts/OpenSans-Semibold-16"
+	},
+	"platforms": {
+		"esp32/esp32c3": {
+			"include": [
+				"$(MODULES)/drivers/st7789",
+				"$(MODULES)/io/digital"
+			],
+			"modules": {
+				"buttons": "./buttons-esp32"
+			},
+			"config": {
+				"screen": "st7789",
+				"buttonA": 9,
+				"buttonB": 8,
+				"buttonC": 6
+			},
+			"defines": {
+				"spi": {
+					"miso_pin": -1,
+					"mosi_pin": 4,
+					"sck_pin": 5
+				},
+				"ili9341": {
+					"width": 240,
+					"height": 240,
+					"hz": 40000000,
+					"cs_pin": 7,
+					"dc_pin": 2,
+					"rst_pin": 1,
+					"backlight_pin": 3,
+					"spi_port": "SPI2_HOST"
+				}
+			}
+		},
+		"...": {
+			"modules": {
+				"buttons": "./buttons-sim"
+			}
+		}
+	},
+	"config": {
+		"room": "",
+		"owner": ""
+	}
+}
